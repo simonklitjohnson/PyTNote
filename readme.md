@@ -24,7 +24,7 @@ no arguments       - lists all your notes and their times of creation
 -d [note no.]      - deletes note with corresponding id
 -e [note no.]      - edits note with corresponding id
 -h                 - lists this help menu
--s                 - shares note with corresponding no. to hastebin (and copies URL to clipboard)
+-s [note no.]      - shares note with corresponding no. to hastebin (and copies URL to clipboard)
 ```
 #### Dependencies
 PyTNote requires the following modules to work:
