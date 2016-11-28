@@ -113,20 +113,6 @@ elif args[0][:2] == "-d":
 		pass
 
 	read_notes()
-elif args[0][:2] == "-c":
-    try:
-        with open(file, 'r') as notefile:
-            notes = json.loads(notefile.read())
-    except IOError:
-        prnt("You have no notes at this time.\n", True)
-        sys.exit(0)
-    try:
-        pyperclip.copy(notes[int(args[1]) - 1]["content"])
-        prnt("Copied note %s to clipboard." % (str(args[1])), True)
-        read_notes()
-    except IndexError:
-        prnt("Note does not exist. Not copied.\n", True)
-        read_notes()
 elif args[0][:3] == "-cl":
 
 	confirm = input("Are you sure you want to clear your notes? y/n\n> ")
@@ -138,6 +124,21 @@ elif args[0][:3] == "-cl":
 		else:
 			prnt("You have no notes to clear.", True)
 	read_notes()
+
+elif args[0][:2] == "-c":
+    try:
+        with open(file, 'r') as notefile:
+            notes = json.loads(notefile.read())
+    except IOError:
+        prnt("You have no notes at this time.\n", True)
+        sys.exit(0)
+    try:
+        pyperclip.copy(notes[int(args[1]) - 1]["content"])
+        prnt("Copied note %s to clipboard.\n" % (str(args[1])), True)
+        read_notes()
+    except IndexError:
+        prnt("Note does not exist. Not copied.\n", True)
+        read_notes()
 
 elif args[0][:2] == "-h":
 
