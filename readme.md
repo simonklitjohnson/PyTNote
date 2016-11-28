@@ -6,7 +6,7 @@ It allows you to quickly and easily create and manage notes without ever leaving
 
 Creating a new note is as simple as typing "note Remember to update readme".
 
-![alt tag](http://img4.imagetitan.com/img4/small/14/14_screenshot2016-11-28at14.00.16.png)
+![alt tag](http://img4.imagetitan.com/img4/ciO0bPFjaHN23TR/14/14_screenshot2016-11-28at14.00.16.png)
 
 Stay on top of your productivity with PyTNote!
 
