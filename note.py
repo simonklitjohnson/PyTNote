@@ -113,19 +113,8 @@ elif args[0][:2] == "-d":
 		pass
 
 	read_notes()
-elif args[0][:3] == "-cl":
 
-	confirm = input("Are you sure you want to clear your notes? y/n\n> ")
-	print(" ")
-	if confirm == "y":
-		if os.path.exists(file): # Delete file containing notes = clear.
-			os.remove(file)
-			prnt("Notes cleared.\n", True)
-		else:
-			prnt("You have no notes to clear.", True)
-	read_notes()
-
-elif args[0][:2] == "-c":
+elif args[0] == "-c":
     try:
         with open(file, 'r') as notefile:
             notes = json.loads(notefile.read())
@@ -139,6 +128,17 @@ elif args[0][:2] == "-c":
     except IndexError:
         prnt("Note does not exist. Not copied.\n", True)
         read_notes()
+elif args[0] == "-cl":
+
+	confirm = input("Are you sure you want to clear your notes? y/n\n> ")
+	print(" ")
+	if confirm == "y":
+		if os.path.exists(file): # Delete file containing notes = clear.
+			os.remove(file)
+			prnt("Notes cleared.\n", True)
+		else:
+			prnt("You have no notes to clear.", True)
+	read_notes()
 
 elif args[0][:2] == "-h":
 
