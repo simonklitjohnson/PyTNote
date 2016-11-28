@@ -32,6 +32,20 @@ except ImportError:
 
 from appdirs import *
 
+try:
+    __import__("pyperclip")
+except ImportError:
+    confirm = input("Pyperclip package is not installed and is required for PyTNote.\n\nDo you want to install it with pip? y/n \n(Note that if you do not have pip installed this will not work, and in that case see https://pip.pypa.io/en/stable/installing)\n> ")
+    if confirm == "y":
+        print(" ")
+        os.system("pip install pyperclip")
+    else:
+        print("Pyperclip required. Stopping script.")
+        sys.exit(0)
+    pass
+
+import pyperclip
+
 appname = "PyTNote"
 appauthor = "SimonKlitJohnson"
 args = sys.argv[1:]
@@ -100,6 +114,20 @@ elif args[0][:2] == "-d":
 
 	read_notes()
 elif args[0][:2] == "-c":
+    try:
+        with open(file, 'r') as notefile:
+            notes = json.loads(notefile.read())
+    except IOError:
+        prnt("You have no notes at this time.\n", True)
+        sys.exit(0)
+    try:
+        pyperclip.copy(notes[int(args[1]) - 1]["content"])
+        prnt("Copied note %s to clipboard." % (str(args[1])), True)
+        read_notes()
+    except IndexError:
+        prnt("Note does not exist. Not copied.\n", True)
+        read_notes()
+elif args[0][:3] == "-cl":
 
 	confirm = input("Are you sure you want to clear your notes? y/n\n> ")
 	print(" ")
@@ -116,7 +144,8 @@ elif args[0][:2] == "-h":
 	prnt("Help:\n",True)
 	prnt("\033[1mno arguments\033[0m\t- lists all your notes and their times of creation")
 	prnt("\033[1m*\033[0m\t\t- creates a new note consisting of all arguments joined.\n")
-	prnt("\033[1m-c\033[0m\t\t- clears all notes (asks you to confirm before doing so)")
+	prnt("\033[1m-c [note no.]\033[0m\t- copies the contents of the note to the clipboard")
+	prnt("\033[1m-cl\033[0m\t\t- clears all notes (asks you to confirm before doing so)")
 	prnt("\033[1m-d [note no.]\033[0m\t- deletes note with corresponding id")
 	prnt("\033[1m-e [note no.]\033[0m\t- edits note with corresponding id")
 	prnt("\033[1m-h\033[0m\t\t- lists this help menu")
