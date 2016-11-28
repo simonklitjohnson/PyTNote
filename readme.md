@@ -16,14 +16,14 @@ This software has no license, so do whatever you want to with it. I'd prefer it 
 #### Arguments
 You can use the following arguments when running the script:
 
-no arguments	- lists all your notes and their times of creation
--				      - creates a new note consisting of all arguments joined
+no arguments          - lists all your notes and their times of creation
+string of text        - creates a new note consisting of all arguments joined
 
--c [note no.]	- copies the contents of the note to the clipboard
--cl				    - clears all notes (asks you to confirm before doing so)
--d [note no.]	- deletes note with corresponding id
--e [note no.]	- edits note with corresponding id
--h				    - lists this help menu
+-c [note no.]         - copies the contents of the note to the clipboard
+-cl				            - clears all notes (asks you to confirm before doing so)
+-d [note no.]	        - deletes note with corresponding id
+-e [note no.]	        - edits note with corresponding id
+-h				            - lists this help menu
 
 #### Dependencies
 PyTNote requires the following modules to work:
