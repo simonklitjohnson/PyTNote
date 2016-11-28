@@ -17,34 +17,27 @@ import time
 import datetime
 import json
 import os
+import importlib
 
-try:
-    __import__("appdirs")
-except ImportError:
-    confirm = input("Appdirs package is not installed and is required for PyTNote.\n\nDo you want to install it with pip? y/n \n(Note that if you do not have pip installed this will not work, and in that case see https://pip.pypa.io/en/stable/installing)\n> ")
-    if confirm == "y":
-        print(" ")
-        os.system("pip install appdirs")
-    else:
-        print("Appdirs required. Stopping script.")
-        sys.exit(0)
-    pass
+def impmodule(module): # Function allows us to check whether a dependency is already met, and if not, install it with pip.
+    try:
+        __import__(module)
+        return importlib.import_module(module)
+    except ImportError:
+        confirm = input("\n%s package is not installed and is required for PyTNote.\n\nDo you want to install it using pip? (y/n)\n(See https://pip.pypa.io/en/stable/installing if pip is not intalled on your machine)\n> " % (module))
+        if confirm == "y":
+            print(" ")
+            os.system("pip install %s" % (module))
+            print(" ")
+            return importlib.import_module(module)
+        else:
+            print("%s is required. Stopping script." % (module))
+            sys.exit(0)
+        pass
 
-from appdirs import *
-
-try:
-    __import__("pyperclip")
-except ImportError:
-    confirm = input("Pyperclip package is not installed and is required for PyTNote.\n\nDo you want to install it with pip? y/n \n(Note that if you do not have pip installed this will not work, and in that case see https://pip.pypa.io/en/stable/installing)\n> ")
-    if confirm == "y":
-        print(" ")
-        os.system("pip install pyperclip")
-    else:
-        print("Pyperclip required. Stopping script.")
-        sys.exit(0)
-    pass
-
-import pyperclip
+appdirs = impmodule("appdirs")
+pyperclip = impmodule("pyperclip")
+requests = impmodule("requests")
 
 appname = "PyTNote"
 appauthor = "SimonKlitJohnson"
@@ -54,67 +47,78 @@ notes = []
 print(" ")  # Padding at beginning of script
 
 
-def prnt(msg, bold=False):
-	if bold:
-		print("\033[1m%s\033[0m" % (msg))
-	else:
-		print(msg)
+
+def prnt(msg, bold=False): # Allows us to easily make some text bold.
+    if bold:
+        print("\033[1m%s\033[0m" % (msg))
+    else:
+        print(msg)
 
 
 def write_and_read(msg=None):
-	write_notes()
-	if msg == None:
-		prnt("Note saved.\n", True)
-	else:
-		prnt(msg+"\n", True)
-	read_notes()
+    write_notes()
+    if msg == None:
+        prnt("Note saved.\n", True)
+    else:
+        prnt(msg+"\n", True)
+    read_notes()
 
 
 def write_notes():
-	with open(file, 'w+') as notefile:
-		notefile.write(json.dumps(notes))
+    with open(file, 'w+') as notefile:
+        notefile.write(json.dumps(notes))
+
 
 def read_notes():
-	if os.path.exists(file):
-		with open(file, 'r') as outfile:
-			outfile = json.loads(outfile.read())
-			if len(outfile) > 0:
-				prnt("Your notes:", True)
-				i = 1
-				for note in outfile:
-					prnt("("+str(i)+") "+"\033[4m" + datetime.datetime.fromtimestamp(int(note['creation_time'])).strftime('%d/%m - %H:%M') + "\033[0m: \"" +note['content'] + "\"")
-					i = i + 1
-			else:
-				prnt("You have no notes at this time.", True)
+    if os.path.exists(file):
+        with open(file, 'r') as outfile:
+            outfile = json.loads(outfile.read())
+            if len(outfile) > 0:
+                prnt("Your notes:", True)
+                i = 1
+                for note in outfile: # Convert timestamp to datetime and output the contents of the note.
+                    prnt("("+str(i)+") "+"\033[4m" + datetime.datetime.fromtimestamp(int(note['creation_time'])).strftime('%d/%m - %H:%M') + "\033[0m: \"" +note['content'] + "\"")
+                    i = i + 1
+            else:
+                prnt("You have no notes at this time.", True)
 
-	else:
-		prnt("You have no notes at this time.", True)
+    else:
+        prnt("You have no notes at this time.", True)
 
-file = user_data_dir(appname, appauthor) + "/pytnote.json"
 
-if not os.path.isdir(user_data_dir(appname, appauthor)):
-    os.mkdir(user_data_dir(appname, appauthor))
+file = appdirs.user_data_dir(appname, appauthor) + "/pytnote.json" # Get OS-specific AppDirectory, in which to store the notes.
 
-if len(args) == 0:
-	read_notes()
+if not os.path.isdir(appdirs.user_data_dir(appname, appauthor)): # Create AppDirectory folder if it doesn't exists.
+    os.mkdir(appdirs.user_data_dir(appname, appauthor))
+
+if len(args) == 0: # If there are no arguments.
+    read_notes()
+
 elif args[0][:2] == "-d":
-	try:
-		with open(file, 'r') as notefile:
-			notes = json.loads(notefile.read())
-	except IOError:
-		prnt("You have no notes at this time.\n", True)
-		sys.exit(0)
-	try:
-		del(notes[int(args[1]) - 1])
-		write_notes()
-		prnt("Note %s deleted.\n" % (str(int(args[1]))), True)
-	except IndexError:
-		prnt("Note does not exist. Not deleted.\n", True)
-		pass
+    '''
+        Deletes note by removing from list and then rewriting to notefile.
+    '''
+    try:
+        with open(file, 'r') as notefile:
+            notes = json.loads(notefile.read())
+    except IOError:
+        prnt("You have no notes at this time.\n", True)
+        sys.exit(0)
+    try:
+        del(notes[int(args[1]) - 1])
+        write_notes()
+        prnt("Note %s deleted.\n" % (str(int(args[1]))), True)
+    except IndexError:
+        prnt("Note does not exist. Not deleted.\n", True)
+        pass
 
-	read_notes()
+    read_notes()
 
 elif args[0] == "-c":
+    '''
+        Copies contents of the note to the clipboard using pyperclip module.
+    '''
+    
     try:
         with open(file, 'r') as notefile:
             notes = json.loads(notefile.read())
@@ -128,107 +132,141 @@ elif args[0] == "-c":
     except IndexError:
         prnt("Note does not exist. Not copied.\n", True)
         read_notes()
-elif args[0] == "-cl":
 
-	confirm = input("Are you sure you want to clear your notes? y/n\n> ")
-	print(" ")
-	if confirm == "y":
-		if os.path.exists(file): # Delete file containing notes = clear.
-			os.remove(file)
-			prnt("Notes cleared.\n", True)
-		else:
-			prnt("You have no notes to clear.", True)
-	read_notes()
+elif args[0] == "-cl":
+    '''
+        Deletes all notes by simply deleting the notefile.
+    '''
+    confirm = input("Are you sure you want to clear your notes? (y/n)\n> ")
+    print(" ")
+    if confirm == "y":
+        if os.path.exists(file): # Delete file containing notes = clear.
+            os.remove(file)
+            prnt("Notes cleared.\n", True)
+        else:
+            prnt("You have no notes to clear.", True)
+    read_notes()
 
 elif args[0][:2] == "-h":
 
-	prnt("Help:\n",True)
-	prnt("\033[1mno arguments\033[0m\t- lists all your notes and their times of creation")
-	prnt("\033[1m*\033[0m\t\t- creates a new note consisting of all arguments joined.\n")
-	prnt("\033[1m-c [note no.]\033[0m\t- copies the contents of the note to the clipboard")
-	prnt("\033[1m-cl\033[0m\t\t- clears all notes (asks you to confirm before doing so)")
-	prnt("\033[1m-d [note no.]\033[0m\t- deletes note with corresponding id")
-	prnt("\033[1m-e [note no.]\033[0m\t- edits note with corresponding id")
-	prnt("\033[1m-h\033[0m\t\t- lists this help menu")
+    prnt("Help:\n",True)
+    prnt("\033[1mno arguments\033[0m\t- lists all your notes and their times of creation")
+    prnt("\033[1m*\033[0m\t\t- creates a new note consisting of all arguments joined.\n")
+    prnt("\033[1m-c [note no.]\033[0m\t- copies the contents of the note to the clipboard")
+    prnt("\033[1m-cl\033[0m\t\t- clears all notes (asks you to confirm before doing so)")
+    prnt("\033[1m-d [note no.]\033[0m\t- deletes note with corresponding no.")
+    prnt("\033[1m-e [note no.]\033[0m\t- edits note with corresponding no.")
+    prnt("\033[1m-h\033[0m\t\t- lists this help menu")
+    prnt("\033[1m-s [note no.]\033[0m\t- shares note with corresponding no. to hastebin (and copies URL to clipboard)")
+
+
+elif args[0] == "-s":
+    '''
+        Shares the note to the pastebin platform hastebin. We use hastebin as it doesn't require you to have an API key.
+        We could potentially add the option for different platforms, but for now hastebin will do fine.
+    '''
+    try:
+        with open(file, 'r') as notefile:
+            notes = json.loads(notefile.read())
+    except IOError:
+        prnt("You have no notes at this time.\n", True)
+        sys.exit(0)
+    try:
+        r = requests.post("http://hastebin.com/documents", data=notes[int(args[1]) -1]['content'])
+        r = json.loads(r.text)
+        url = "http://hastebin.com/" + r['key']
+        pyperclip.copy(url)
+        prnt("Note shared to URL %s. URL copied to clipboard.\n" % (url), True)
+        read_notes()
+    except IndexError:
+        prnt("Note does not exist. Not shared.\n", True)
+        read_notes()
+
 
 elif args[0][:2] == "-e":
-	if os.path.exists(file):
-		with open(file, 'r') as notefile:
-			notes = json.loads(notefile.read())
-	note = notes[int(args[1]) -1]
-	prnt("Editing note %s:\n" % (str(int(args[1]))), True)
-	prnt("Old note is: \"%s\"." % (note['content']))
+    '''
+        Edits the note so the timestamp will remain the same, but the content differs; for fixing typo etc.
+    '''
+    if os.path.exists(file):
+        with open(file, 'r') as notefile:
+            notes = json.loads(notefile.read())
+    note = notes[int(args[1]) -1]
+    prnt("Editing note %s:\n" % (str(int(args[1]))), True)
+    prnt("Old note is: \"%s\"." % (note['content']))
 
-	if sys.platform == "darwin": # Script runs on macOS
+    if sys.platform == "darwin": # Script runs on macOS
 
-		'''
+        '''
 
-		macOS allows us to use the proprietary scripting language AppleScript to control different aspects of the window
-			manager and the system in general. This allows us to enter in the old note in the edit line, so the user actually
-			edits the old note instead of simply retyping it.
-			Not possible to do similar in Linux and Windows without installing
-			external software.
+        macOS allows us to use the proprietary scripting language AppleScript to control different aspects of the window
+            manager and the system in general. This allows us to enter in the old note in the edit line, so the user actually
+            edits the old note instead of simply retyping it.
+            Not possible to do similar in Linux and Windows without installing complex external software.
 
-		Example of difference:
+        Example of difference:
 
-		macOS:
-			~$ note -e 1
+        macOS:
+            ~$ note -e 1
 
-			Editing note 1:
+            Editing note 1:
 
-			Old note is: "test"
+            Old note is: "test"
 
-			Edit note below:
-			> test █
+            Edit note below:
+            > test █
 
-		Other OS:
-			~$ note -e 1
+        Other OS:
+            ~$ note -e 1
 
-			Editing note 1:
+            Editing note 1:
 
-			Old note is: "test"
+            Old note is: "test"
 
-			Type the new note below:
-			> █
+            Type the new note below:
+            > █
 
-		'''
+        '''
 
-		prnt("\nEdit note below:")
-		code = """osascript -e 'tell application "Terminal" to activate
-						delay 0.2
-						tell application "System Events"
-							keystroke "> %s"
-					end tell'
-				""" % (note['content'])
+        prnt("\nEdit note below:")
 
-		os.system(code.encode('utf-8', 'ignore'))
+        code = """osascript -e 'tell application "Terminal" to activate
+                        delay 0.2
+                        tell application "System Events"
+                            keystroke "> %s"
+                    end tell'
+                """ % (note['content'])
 
-		newnote = input("")
-		if newnote[:2] == "> ":
-			newnote = newnote[2:]
-		elif newnote[:1] == ">":
-			newnote = newnote[1:]
-		notes[int(args[1]) -1]['content'] = newnote
+        os.system(code.encode('utf-8', 'ignore')) # Run AppleScript code.
 
-		write_and_read("\nNote succesfully edited.")
+        newnote = input("")
 
-	else:
-		prnt("\nType the new note below:")
+        # We now have to remove the pseudo-prompt "> " that we added using AppleScript, so that it doesn't become part of the edited notes contents.
 
-		newnote = input("> ")
-		notes[int(args[1]) -1]['content'] = newnote
+        if newnote[:2] == "> ":
+            newnote = newnote[2:]
+        elif newnote[:1] == ">":
+            newnote = newnote[1:]
 
-		write_and_read("\nNote succesfully edited.")
+        notes[int(args[1]) -1]['content'] = newnote
 
-else:
-	if os.path.exists(file):
-		with open(file, 'r') as notefile:
-			notes = json.loads(notefile.read())
-		notes.append({"creation_time":int(time.time()),"content":" ".join(args)})
-		write_and_read()		
-	else:
-		notes.append({"creation_time":int(time.time()),"content":" ".join(args)})
-		write_and_read()		
+        write_and_read("\nNote succesfully edited.")
+
+    else:
+        prnt("\nType the new note below:")
+
+        notes[int(args[1]) -1]['content'] = input("> ")
+
+        write_and_read("\nNote succesfully edited.")
+
+else: # If the text passed does not match any of our commands = create new note.
+    if os.path.exists(file): # If we already have some notes saved
+        with open(file, 'r') as notefile:
+            notes = json.loads(notefile.read())
+        notes.append({"creation_time":int(time.time()),"content":" ".join(args)})
+        write_and_read()        
+    else: #If we do not have any notes saved yet
+        notes.append({"creation_time":int(time.time()),"content":" ".join(args)})
+        write_and_read()        
 
 print(" ")  # Padding at end of script
 

@@ -24,13 +24,15 @@ no arguments       - lists all your notes and their times of creation
 -d [note no.]      - deletes note with corresponding id
 -e [note no.]      - edits note with corresponding id
 -h                 - lists this help menu
+-s                 - shares note with corresponding no. to hastebin (and copies URL to clipboard)
 ```
 #### Dependencies
 PyTNote requires the following modules to work:
 * appdirs (finds the correct place to store the notes depending on your OS)
 * pyperclip (allows you to copy the note to clipboard)
+* requests (allows you to share the note to hastebin.com)
 
-If you have pip installed, both of the modules will automatically be installed upon running the script.
+If you have pip installed, all of the modules will automatically be installed upon running the script.
 
 ### macOS and Linux
 Installing PyTNote on macOS and Linux distributions is as simple as running the following one-liner in your terminal:
