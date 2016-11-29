@@ -173,6 +173,7 @@ elif args[0][:2] == "-h":
     prnt("\033[1m-d [note no.]\033[0m\t- deletes note with corresponding no.")
     prnt("\033[1m-e [note no.]\033[0m\t- edits note with corresponding no.")
     prnt("\033[1m-h\033[0m\t\t- lists this help menu")
+    prnt("\033[1m-u\033[0m\t\t- update PyTNote if update is available")
     prnt("\033[1m-s [note no.]\033[0m\t- shares note with corresponding no. to hastebin (and copies URL to clipboard)")
 
 
