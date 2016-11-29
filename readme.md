@@ -25,8 +25,8 @@ no arguments       - lists all your notes and their times of creation
 -e [note no.]      - edits note with corresponding id
 -h                 - lists this help menu
 -u                 - update PyTNote if update is available
--s                 - shares note with corresponding no. to hastebin (and copies URL to clipboard)
-```
+-s [note no.]      - shares note with corresponding no. to hastebin (and copies URL to clipboard)
+
 #### Dependencies
 PyTNote requires the following modules to work:
 * appdirs (finds the correct place to store the notes depending on your OS)
