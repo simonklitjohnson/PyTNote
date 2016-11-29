@@ -42,7 +42,7 @@ requests = impmodule("requests")
 
 appname = "PyTNote"
 appauthor = "SimonKlitJohnson"
-tag_name = 0.11
+tag_name = 0.12
 args = sys.argv[1:]
 notes = []
 
@@ -90,17 +90,16 @@ def check_update(retrn=True):
         r = requests.get("https://api.github.com/repos/simonklitjohnson/PyTNote/releases/latest", timeout=2).json()
         if float(r['tag_name']) > tag_name:
             if retrn:
-                prnt("There is a newer version of PyTNote available. Run \"%s -u\" to update. You will not lose your notes.\n"% (sys.argv[0]), True)
+                prnt("\nThere is a newer version of PyTNote available. Run PyTNote with \"-u\" argument to update. You will not lose your notes.", True)
             else:
-                return r['zipball_url']
+                prnt(" ")
+                return r
         else:
             if not retrn:
                 return False
     except requests.exceptions.RequestException as e:
+        return False
         pass
-
-if "-u" not in args:
-    check_update()
 
 file = appdirs.user_data_dir(appname, appauthor) + "/pytnote.json" # Get OS-specific AppDirectory, in which to store the notes.
 
@@ -210,95 +209,122 @@ elif args[0][:2] == "-e":
     if os.path.exists(file):
         with open(file, 'r') as notefile:
             notes = json.loads(notefile.read())
-    note = notes[int(args[1]) -1]
-    prnt("Editing note %s:\n" % (str(int(args[1]))), True)
-    prnt("Old note is: \"%s\"." % (note['content']))
+    try:
+        note = notes[int(args[1]) -1]
+        prnt("Editing note %s:\n" % (str(int(args[1]))), True)
+        prnt("Old note is: \"%s\"." % (note['content']))
 
-    if sys.platform == "darwin": # Script runs on macOS
+        if sys.platform == "darwin": # Script runs on macOS
 
-        '''
+            '''
 
-        macOS allows us to use the proprietary scripting language AppleScript to control different aspects of the window
-            manager and the system in general. This allows us to enter in the old note in the edit line, so the user actually
-            edits the old note instead of simply retyping it.
-            Not possible to do similar in Linux and Windows without installing complex external software.
+            macOS allows us to use the proprietary scripting language AppleScript to control different aspects of the window
+                manager and the system in general. This allows us to enter in the old note in the edit line, so the user actually
+                edits the old note instead of simply retyping it.
+                Not possible to do similar in Linux and Windows without installing complex external software.
 
-        Example of difference:
+            Example of difference:
 
-        macOS:
-            ~$ note -e 1
+            macOS:
+                ~$ note -e 1
 
-            Editing note 1:
+                Editing note 1:
 
-            Old note is: "test"
+                Old note is: "test"
 
-            Edit note below:
-            > test █
+                Edit note below:
+                > test █
 
-        Other OS:
-            ~$ note -e 1
+            Other OS:
+                ~$ note -e 1
 
-            Editing note 1:
+                Editing note 1:
 
-            Old note is: "test"
+                Old note is: "test"
 
-            Type the new note below:
-            > █
+                Type the new note below:
+                > █
 
-        '''
+            '''
 
-        prnt("\nEdit note below:")
+            prnt("\nEdit note below:")
 
-        code = """osascript -e 'tell application "Terminal" to activate
-                        delay 0.2
-                        tell application "System Events"
-                            keystroke "> %s"
-                    end tell'
-                """ % (note['content'])
+            code = """osascript -e 'tell application "Terminal" to activate
+                            delay 0.2
+                            tell application "System Events"
+                                keystroke "> %s"
+                        end tell'
+                    """ % (note['content'])
 
-        os.system(code.encode('utf-8', 'ignore')) # Run AppleScript code.
+            os.system(code.encode('utf-8', 'ignore')) # Run AppleScript code.
 
-        newnote = input("")
+            newnote = input("")
 
-        # We now have to remove the pseudo-prompt "> " that we added using AppleScript, so that it doesn't become part of the edited notes contents.
+            # We now have to remove the pseudo-prompt "> " that we added using AppleScript, so that it doesn't become part of the edited notes contents.
 
-        if newnote[:2] == "> ":
-            newnote = newnote[2:]
-        elif newnote[:1] == ">":
-            newnote = newnote[1:]
+            if newnote[:2] == "> ":
+                newnote = newnote[2:]
+            elif newnote[:1] == ">":
+                newnote = newnote[1:]
 
-        notes[int(args[1]) -1]['content'] = newnote
+            notes[int(args[1]) -1]['content'] = newnote
 
-        write_and_read("\nNote succesfully edited.")
+            write_and_read("\nNote succesfully edited.")
 
-    else:
-        prnt("\nType the new note below:")
+        else:
+            prnt("\nType the new note below:")
 
-        notes[int(args[1]) -1]['content'] = input("> ")
+            notes[int(args[1]) -1]['content'] = input("> ")
 
-        write_and_read("\nNote succesfully edited.")
+            write_and_read("\nNote succesfully edited.")
+    except IndexError:
+        prnt("Note does not exist. Not editable.\n", True)
+        read_notes()
 
 elif args[0] == "-u":
     '''
         Update the script by downloading latest release zipball, unzipping and asking user to replace note script with new one.
     '''
-    zipball = check_update(False)
-    if zipball != False:
-        prnt("Downloading PyTNote update...\n", True)
+    update = check_update(False)
+    if update != False:
+        prnt("Update available.\n", True)
+        prnt("Update changelog: \"%s\"\n" % (update['body']))
+        confirm = input("Do you want to download and install the new update? You won't lose your notes. (y/n)\n\n> ")
+        if confirm == "y":
+            if sys.platform != "win32":
+                try:
+                    prnt("\nUpdating PyTNote.\n", True)
+                    prnt("Downloading...\n")
 
-        os.system("curl -L %s > \"%s/note.zip\"" % (zipball, appdirs.user_data_dir(appname, appauthor)))
-        zip = zipfile.ZipFile(appdirs.user_data_dir(appname, appauthor) + '/note.zip', 'r')
-        namelist = zip.namelist()
-        zip.extractall(appdirs.user_data_dir(appname, appauthor))
-        zip.close()
-        os.system("mv \"%s/%snote.py\" \"%s/%snote\"" % (appdirs.user_data_dir(appname, appauthor), namelist[0],appdirs.user_data_dir(appname, appauthor), namelist[0]))
-        os.system("chmod +x \"%s/%snote\"" % (appdirs.user_data_dir(appname, appauthor), namelist[0]))
+                    # Download update with cURL
+                    os.system("curl -L %s > \"%s/note.zip\"" % (update['zipball_url'], appdirs.user_data_dir(appname, appauthor)))
+                    
+                    # Extract update zip.
+                    prnt("\nExtracting...")
+                    zip = zipfile.ZipFile(appdirs.user_data_dir(appname, appauthor) + '/note.zip', 'r')
+                    namelist = zip.namelist()
+                    zip.extractall(appdirs.user_data_dir(appname, appauthor))
+                    zip.close()
+                    
+                    # Install update by making script executable and moving to correct location.
+                    prnt("Installing...\n")
+                    os.rename("%s/%snote.py" % (appdirs.user_data_dir(appname, appauthor), namelist[0]),  "%s/%snote" % (appdirs.user_data_dir(appname, appauthor), namelist[0]))
+                    
+                    # Make new note script executable.
+                    os.system("chmod +x \"%s/%snote\"" % (appdirs.user_data_dir(appname, appauthor), namelist[0]))
 
-        prnt("\nRun the following one-liner (also copied to your clipboard) in your terminal to finish update PyTNote (assuming PyTNote is installed in /usr/local/bin.)\n", True)
-        oneliner = "mv \"%s/%snote\" /usr/local/bin/note" % (appdirs.user_data_dir(appname, appauthor), namelist[0])
-        prnt(oneliner)
-        pyperclip.copy(oneliner)
-        sys.exit(0)
+                    # Move new note script to /usr/local/bin for easy execution in terminal.
+                    os.system("mv \"%s/%snote\" /usr/local/bin/note" % (appdirs.user_data_dir(appname, appauthor), namelist[0]))
+
+                    prnt("PyTNote succesfully updated.",True)
+                except:
+                    prnt("Something went wrong during the update. Try doing a manual update by following this URL (also copied to clipboard): %s" % (update['url']), True)
+                    pyperclip.copy(update['url'])
+            else:
+                prnt("You can get the new update at: %s. URL copied to clipboard." % update['url'], True)
+                pyperclip.copy(update['url'])
+        else:
+            prnt("\nNot updating.")
     else:
         prnt("No update available.\n", True)
         read_notes()
@@ -306,12 +332,11 @@ elif args[0] == "-u":
 else: # If the text passed does not match any of our commands = create new note.
     if os.path.exists(file): # If we already have some notes saved
         with open(file, 'r') as notefile:
-            notes = json.loads(notefile.read())
-        notes.append({"creation_time":int(time.time()),"content":" ".join(args)})
-        write_and_read()        
-    else: #If we do not have any notes saved yet
-        notes.append({"creation_time":int(time.time()),"content":" ".join(args)})
-        write_and_read()        
+            notes = json.loads(notefile.read())   
+    notes.append({"creation_time":int(time.time()),"content":" ".join(args)})
+    write_and_read()        
+
+if "-u" not in args: # If we're not trying to update the script, check if an update is available.
+    check_update()
 
 print(" ")  # Padding at end of script
-
