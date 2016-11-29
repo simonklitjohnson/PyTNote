@@ -18,6 +18,7 @@ import datetime
 import json
 import os
 import importlib
+import zipfile
 
 def impmodule(module): # Function allows us to check whether a dependency is already met, and if not, install it with pip.
     try:
@@ -41,12 +42,11 @@ requests = impmodule("requests")
 
 appname = "PyTNote"
 appauthor = "SimonKlitJohnson"
+tag_name = 0.11
 args = sys.argv[1:]
 notes = []
 
 print(" ")  # Padding at beginning of script
-
-
 
 def prnt(msg, bold=False): # Allows us to easily make some text bold.
     if bold:
@@ -85,6 +85,22 @@ def read_notes():
     else:
         prnt("You have no notes at this time.", True)
 
+def check_update(retrn=True):
+    try:
+        r = requests.get("https://api.github.com/repos/simonklitjohnson/PyTNote/releases/latest", timeout=2).json()
+        if float(r['tag_name']) > tag_name:
+            if retrn:
+                prnt("There is a newer version of PyTNote available. Run \"%s -u\" to update. You will not lose your notes.\n"% (sys.argv[0]), True)
+            else:
+                return r['zipball_url']
+        else:
+            if not retrn:
+                return False
+    except requests.exceptions.RequestException as e:
+        pass
+
+if "-u" not in args:
+    check_update()
 
 file = appdirs.user_data_dir(appname, appauthor) + "/pytnote.json" # Get OS-specific AppDirectory, in which to store the notes.
 
@@ -181,6 +197,9 @@ elif args[0] == "-s":
     except IndexError:
         prnt("Note does not exist. Not shared.\n", True)
         read_notes()
+    except requests.exceptions.RequestException as e:
+        prnt("Unable to share note. Do you have an internet connection?\n", True)
+        read_notes()
 
 
 elif args[0][:2] == "-e":
@@ -257,6 +276,31 @@ elif args[0][:2] == "-e":
         notes[int(args[1]) -1]['content'] = input("> ")
 
         write_and_read("\nNote succesfully edited.")
+
+elif args[0] == "-u":
+    '''
+        Update the script by downloading latest release zipball, unzipping and asking user to replace note script with new one.
+    '''
+    zipball = check_update(False)
+    if zipball != False:
+        prnt("Downloading PyTNote update...\n", True)
+
+        os.system("curl -L %s > \"%s/note.zip\"" % (zipball, appdirs.user_data_dir(appname, appauthor)))
+        zip = zipfile.ZipFile(appdirs.user_data_dir(appname, appauthor) + '/note.zip', 'r')
+        namelist = zip.namelist()
+        zip.extractall(appdirs.user_data_dir(appname, appauthor))
+        zip.close()
+        os.system("mv \"%s/%snote.py\" \"%s/%snote\"" % (appdirs.user_data_dir(appname, appauthor), namelist[0],appdirs.user_data_dir(appname, appauthor), namelist[0]))
+        os.system("chmod +x \"%s/%snote\"" % (appdirs.user_data_dir(appname, appauthor), namelist[0]))
+
+        prnt("\nRun the following one-liner (also copied to your clipboard) in your terminal to finish update PyTNote (assuming PyTNote is installed in /usr/local/bin.)\n", True)
+        oneliner = "mv \"%s/%snote\" /usr/local/bin/note" % (appdirs.user_data_dir(appname, appauthor), namelist[0])
+        prnt(oneliner)
+        pyperclip.copy(oneliner)
+        sys.exit(0)
+    else:
+        prnt("No update available.\n", True)
+        read_notes()
 
 else: # If the text passed does not match any of our commands = create new note.
     if os.path.exists(file): # If we already have some notes saved
