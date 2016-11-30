@@ -25,6 +25,7 @@ no arguments       - lists all your notes and their times of creation
 -e [note no.]      - edits note with corresponding id
 -h                 - lists this help menu
 -u                 - update PyTNote if update is available
+-uninstall         - uninstall PyTNote (asks you to confirm before doing so)
 -s [note no.]      - shares note with corresponding no. to hastebin (and copies URL to clipboard)
 ```
 

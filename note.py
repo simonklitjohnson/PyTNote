@@ -19,6 +19,7 @@ import json
 import os
 import importlib
 import zipfile
+import shutil
 
 def impmodule(module): # Function allows us to check whether a dependency is already met, and if not, install it with pip.
     try:
@@ -109,7 +110,7 @@ if not os.path.isdir(appdirs.user_data_dir(appname, appauthor)): # Create AppDir
 if len(args) == 0: # If there are no arguments.
     read_notes()
 
-elif args[0][:2] == "-d":
+elif args[0] == "-d":
     '''
         Deletes note by removing from list and then rewriting to notefile.
     '''
@@ -162,7 +163,7 @@ elif args[0] == "-cl":
             prnt("You have no notes to clear.", True)
     read_notes()
 
-elif args[0][:2] == "-h":
+elif args[0] == "-h":
 
     prnt("Help:\n",True)
     prnt("\033[1mno arguments\033[0m\t- lists all your notes and their times of creation")
@@ -173,6 +174,7 @@ elif args[0][:2] == "-h":
     prnt("\033[1m-e [note no.]\033[0m\t- edits note with corresponding no.")
     prnt("\033[1m-h\033[0m\t\t- lists this help menu")
     prnt("\033[1m-u\033[0m\t\t- update PyTNote if update is available")
+    prnt("\033[1m-uninstall\033[0m\t\t- uninstall PyTNote (asks you to confirm before doing so)")
     prnt("\033[1m-s [note no.]\033[0m\t- shares note with corresponding no. to hastebin (and copies URL to clipboard)")
 
 
@@ -202,7 +204,7 @@ elif args[0] == "-s":
         read_notes()
 
 
-elif args[0][:2] == "-e":
+elif args[0] == "-e":
     '''
         Edits the note so the timestamp will remain the same, but the content differs; for fixing typo etc.
     '''
@@ -313,8 +315,8 @@ elif args[0] == "-u":
                     # Make new note script executable.
                     os.system("chmod +x \"%s/%snote\"" % (appdirs.user_data_dir(appname, appauthor), namelist[0]))
 
-                    # Move new note script to /usr/local/bin for easy execution in terminal.
-                    os.system("mv \"%s/%snote\" /usr/local/bin/note" % (appdirs.user_data_dir(appname, appauthor), namelist[0]))
+                    # Move new note script to $/usr/local/bin for easy execution in terminal.
+                    os.system("mv \"%s/%snote\" \"%s\"" % (appdirs.user_data_dir(appname, appauthor), namelist[0], os.path.dirname(os.path.realpath(__file__)) + "/" + os.path.basename(__file__)))
 
                     prnt("PyTNote succesfully updated.",True)
                 except:
@@ -328,7 +330,17 @@ elif args[0] == "-u":
     else:
         prnt("No update available.\n", True)
         read_notes()
-
+elif args[0] == "-uninstall":
+    prompt = input("Are you sure you want to uninstall PyTNote? (y/n)\n> ")
+    if prompt == "y":
+        prompt = input("Do you want to delete all of your notes? (y/n)\n> ")
+        if prompt == "y":
+            shutil.rmtree(appdirs.user_data_dir(appname, appauthor))
+        os.remove(os.path.dirname(os.path.realpath(__file__)) + "/" + os.path.basename(__file__))
+        prnt("\nPyTNote uninstalled. Sad to see you go!\n", True)
+        sys.exit(0)
+    else:
+        prnt("\nAborting uninstallation.",True)
 else: # If the text passed does not match any of our commands = create new note.
     if os.path.exists(file): # If we already have some notes saved
         with open(file, 'r') as notefile:
