@@ -230,7 +230,7 @@ elif args[0] == "-h":
     prnt("\033[1m-uninstall\033[0m\t - uninstall PyTNote (asks you to confirm before doing so)")
     print("\033[1m-uninstall -todo\033[0m - uninstall only the todo extension")
     prnt("\033[1m-s [note no.]\033[0m\t - shares note with corresponding no. to hastebin (and copies URL to clipboard)")
-    prnt("\033[1m-sw [note no.]\033[0m\t - switches note with corresponding no. between begin a todo and a note")
+    prnt("\033[1m-sw [note no.]\033[0m\t - switches note with corresponding no. between being a todo and a note")
 
 
 elif args[0] == "-s":
@@ -394,7 +394,7 @@ elif args[0] == "-t":
             prnt("\033[1m-d [note no.]\033[0m\t- deletes note with corresponding no.")
             prnt("\033[1m-h\033[0m\t\t- shows this help menu")
             prnt("\033[1m-m [note no.]\033[0m\t- marks the note as the opposite of what it currently is\n")
-            prnt("\033[1m-sw [note no.]\033[0m\t- switches note with corresponding no. between begin a todo and a note\n")
+            prnt("\033[1m-sw [note no.]\033[0m\t- switches note with corresponding no. between being a todo and a note\n")
             sys.exit(0)
 
         elif args[0] == "-sw":
@@ -455,20 +455,20 @@ elif args[0] == "-u":
         read_notes()
 
 elif args[0] == "-uninstall":
-
-    if args[1] == "-todo": # Specifically uninstall the todo extension
-        prompt = input("Are you sure you want to uninstall the todo extension? (y/n)\n> ")
-        if prompt == "y":
-            if os.path.exists("/usr/local/bin/todo"):
-                os.remove("/usr/local/bin/todo")
-                prnt("Todo extension removed.", True)
-                sys.exit(0)
+    if len(args) > 1:
+        if args[1] == "-todo": # Specifically uninstall the todo extension
+            prompt = input("Are you sure you want to uninstall the todo extension? (y/n)\n> ")
+            if prompt == "y":
+                if os.path.exists("/usr/local/bin/todo"):
+                    os.remove("/usr/local/bin/todo")
+                    prnt("Todo extension removed.", True)
+                    sys.exit(0)
+                else:
+                    prnt("\nTodo extension not installed.\n",True)
+                    sys.exit(0)
             else:
-                prnt("\nTodo extension not installed.\n",True)
+                prnt("Aborting uninstallation.",True)
                 sys.exit(0)
-        else:
-            prnt("Aborting uninstallation.",True)
-            sys.exit(0)
 
     prompt = input("Are you sure you want to uninstall PyTNote? (y/n)\n> ")
     if prompt == "y":
