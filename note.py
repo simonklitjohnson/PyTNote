@@ -43,7 +43,7 @@ requests = impmodule("requests")
 
 appname = "PyTNote"
 appauthor = "SimonKlitJohnson"
-tag_name = 0.12
+tag_name = 0.13
 args = sys.argv[1:]
 notes = []
 
