@@ -26,14 +26,23 @@ def impmodule(module): # Function allows us to check whether a dependency is alr
         __import__(module)
         return importlib.import_module(module)
     except ImportError:
-        confirm = input("\n%s package is not installed and is required for PyTNote.\n\nDo you want to install it using pip? (y/n)\n(See https://pip.pypa.io/en/stable/installing if pip is not intalled on your machine)\n> " % (module))
+        confirm = input("\n\033[1m%s package is not installed and is required for PyTNote.\033[0m\n\nDo you want to install it using pip? (y/n)\n\n(See https://pip.pypa.io/en/stable/installing if pip is not intalled on your machine)\n> " % (module))
         if confirm == "y":
             print(" ")
             os.system("pip install %s" % (module))
             print(" ")
-            return importlib.import_module(module)
+            os.system('cls' if os.name == 'nt' else 'clear')
+            try:
+                return importlib.import_module(module)
+            except ImportError:
+                os.system("pip3 install %s" % (module))
+                os.system('cls' if os.name == 'nt' else 'clear')
+                try:
+                    return importlib.import_module(module)
+                except ImportError:
+                    print("Failed to install package with pip. Please try to install %s manually." % (module))
         else:
-            print("%s is required. Stopping script." % (module))
+            print("\n%s is required for the script to function. Stopping.\n" % (module))
             sys.exit(0)
         pass
 
